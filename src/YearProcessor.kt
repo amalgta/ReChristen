@@ -100,10 +100,13 @@ object YearProcessor {
         val yearOfFilm = stripYearFromFolderAndChildren(folder)
 
         if (yearOfFilm.isNotEmpty()) {
-            target.replace(Regex("\\[$yearOfFilm]\$"), "")
-            target.replace(Regex(yearOfFilm), "")
-            target = target.plus("[$yearOfFilm]")
+            //target = target.replace(Regex("\\[$yearOfFilm]"), "")
+            target = target.replace(Regex("\\[\\d{4}]"), "")
+            target = target.replace(Regex(yearOfFilm), "")
+            target = target.replace(Regex(yearOfFilm), "")
+            target = target.plus(" [$yearOfFilm]")
         }
+        target = target.trim().replace("\\s+".toRegex(), " ")
 
         val targetFolder = File(folder.parentFile.path + "\\" + target)
         Utils.renameFolder(folder, targetFolder)

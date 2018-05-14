@@ -6,8 +6,7 @@ object Main {
 
     @JvmStatic
     fun main(args: Array<String>) {
-       // startProcess("G:\\mv")
-        Utils.renameFolder(File("G:\\banana\\test1"), File("G:\\banana\\test2"))
+        startProcess("C:\\Users\\amalg\\Desktop\\Christener\\SRC")
     }
 
     private fun startProcess(path: String) {

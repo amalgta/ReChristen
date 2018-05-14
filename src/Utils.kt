@@ -17,8 +17,8 @@ object Utils {
                 while (matcher.find()) {
                     yearOfFilm = matcher.group()
                 }
-                var newNameWithOutYear = newName.nameWithoutExtension.replace(Regex(regExPattern), "")
-                var newNameWithExtension = (newNameWithOutYear + " (" + ++i + ") " + yearOfFilm + "." + newName.extension).trim().replace("\\s+".toRegex(), " ")
+                var newNameWithOutYear = newName.nameWithoutExtension.replace(Regex(regExPattern), "").trim().replace("\\s+".toRegex(), " ")
+                var newNameWithExtension = (newNameWithOutYear + " (" + ++i + ") " + yearOfFilm + "." + newName.extension).trim()
                 newName = File(newName.parentFile.path + "\\" + newNameWithExtension)
             }
         }
@@ -35,10 +35,10 @@ object Utils {
         return false
     }
 
-    fun mergeTwoDirectories(dir1: File, dir2: File) {
-        val targetDirPath = dir1.absolutePath
-        val files = dir2.listFiles()
-        for (file in files!!) {
+    fun mergeTwoDirectories(target: File, source: File) {
+        val targetDirPath = target.absolutePath
+        val sourceFiles = source.listFiles()
+        for (file in sourceFiles!!) {
             renameFile(file, (File(targetDirPath + File.separator + file.name)))
             //file.renameTo(File(targetDirPath + File.separator + file.name))
         }
