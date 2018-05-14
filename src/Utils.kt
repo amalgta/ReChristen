@@ -1,9 +1,15 @@
 import java.io.File
 import java.util.regex.Pattern
+import java.security.DigestInputStream
+import java.io.FileInputStream
+import java.io.InputStream
+import java.security.MessageDigest
+
 
 object Utils {
 
     fun renameFile(oldName: File, newName: File): Boolean {
+        if (areBothFilesSame(oldName, newName)) return false
         var newName = newName
         var i = 0
         while (newName.exists()) {
@@ -24,6 +30,28 @@ object Utils {
         }
 
         return oldName.renameTo(newName)
+    }
+
+    private fun areBothFilesSame(oldName: File, newName: File): Boolean {
+        if (!oldName.exists()) return false
+        if (!newName.exists()) return false
+        if (newName.isDirectory) return false
+        if (oldName.isDirectory) return false
+
+        val messageDigest1 = MessageDigest.getInstance("MD5")
+        var inputStream1: InputStream = FileInputStream(oldName)
+        val messageDigest2 = MessageDigest.getInstance("MD5")
+        var inputStream2: InputStream = FileInputStream(newName)
+
+        try {
+            inputStream1 = DigestInputStream(inputStream1, messageDigest1)
+            inputStream2 = DigestInputStream(inputStream2, messageDigest2)
+        } finally {
+            inputStream1.close()
+            inputStream2.close()
+        }
+
+        return messageDigest1.digest()!!.contentEquals(messageDigest2.digest())
     }
 
     fun renameFolder(oldName: File, newName: File): Boolean {

@@ -8,12 +8,7 @@ object YearProcessor {
                 parent,
                 object : FileOperations.FileT {
                     override fun onFile(file: File): File {
-                        /*
-                        if (Constants.ignoredFiles.contains(Utils.getExtension(file.name))) return file
-                        val newFile = processFile(file)
-                        Utils.renameFile(file, newFile)
-                        */
-                        return file
+                        return processFile(file)
                     }
 
                     override fun onFolder(folder: File): File {
@@ -22,6 +17,48 @@ object YearProcessor {
 
                 }
         )
+        print("Year handling finished")
+    }
+
+    private fun processFile(file: File): File {
+        if (!isGoodFileExtension(file.extension)) return file
+
+        var yearOfFilm: String
+        var target = file.nameWithoutExtension
+
+        val years: HashSet<String> = hashSetOf()
+        for (thisElement in stripYear(file.parent)) {
+            years.add(thisElement.key)
+        }
+
+        if (years.isEmpty()) {
+            for (thisElement in stripYear(file.nameWithoutExtension)) {
+                years.add(thisElement.key)
+            }
+        }
+
+        yearOfFilm = if (years.isNotEmpty()) {
+            if (years.size == 1) {
+                years.elementAt(0)
+            } else {
+                getFromList(file.name, years)
+            }
+        } else {
+            ""
+        }
+
+        if (yearOfFilm.isNotEmpty()) {
+            target = target.replace(Regex("\\[\\d{4}]"), "")
+            target = target.replace(Regex(yearOfFilm), "")
+            target += (" [$yearOfFilm]")
+        }
+        target = target.trim().replace("\\s+".toRegex(), " ")
+        target += "." + file.extension
+
+        val targetFile = File(file.parentFile.path + "\\" + target)
+
+        Utils.renameFile(file, targetFile)
+        return file
     }
 
     private fun stripYearFromFolderAndChildren(folder: File): String {
@@ -34,7 +71,7 @@ object YearProcessor {
                     override fun onFile(file: File): File {
                         if (!isGoodFileExtension(file.extension)) return file
 
-                        val yearsFromFile = stripYear(file.name)
+                        val yearsFromFile = stripYear(file.nameWithoutExtension)
                         if (yearsFromFile.isNotEmpty()) {
                             filesAndYears[file] = yearsFromFile
                         }
@@ -62,33 +99,41 @@ object YearProcessor {
             //println()
         }
 
-        for (thisYear in years) {
+
+        val iterator = years.iterator()
+        while (iterator.hasNext()) {
+            val thisYear = iterator.next()
             if (!isGoodYear(thisYear))
-                years.remove(thisYear)
+                iterator.remove()
         }
 
-        if (years.isNotEmpty()) {
+
+        return if (years.isNotEmpty()) {
             if (years.size == 1) {
-                return years.elementAt(0)
+                years.elementAt(0)
             } else {
-
-                var userInput: Int
-                do {
-                    var options = ""
-                    for (i in 0 until years.size step 1) {
-                        options += ("${i + 1}.${years.elementAt(i)} ")
-                    }
-                    print(folder.name + "? " + options)
-
-                    userInput = Integer.parseInt(readLine().toString()) - 1
-
-                } while (userInput !in 0 until years.size)
-
-                return years.elementAt(userInput)
+                getFromList(folder.name, years)
             }
         } else {
-            return ""
+            ""
         }
+    }
+
+    private fun getFromList(prompt: String, years: HashSet<String>): String {
+        if (years.isEmpty()) return ""
+        years.add("")
+        var userInput: Int
+        do {
+            var options = ""
+            for (i in 0 until years.size step 1) {
+                options += ("${i + 1}.${years.elementAt(i)} ")
+            }
+            print("$prompt? $options")
+
+            userInput = Integer.parseInt(readLine().toString()) - 1
+
+        } while (userInput !in 0 until years.size)
+        return years.elementAt(userInput)
     }
 
     private fun processFolder(folder: File): File {
@@ -102,7 +147,6 @@ object YearProcessor {
         if (yearOfFilm.isNotEmpty()) {
             //target = target.replace(Regex("\\[$yearOfFilm]"), "")
             target = target.replace(Regex("\\[\\d{4}]"), "")
-            target = target.replace(Regex(yearOfFilm), "")
             target = target.replace(Regex(yearOfFilm), "")
             target = target.plus(" [$yearOfFilm]")
         }
@@ -129,7 +173,7 @@ object YearProcessor {
             }
 
         }, 2)
-        return (count <= 0)
+        return (count in 10 downTo 0)
     }
 
     private fun containsRequiredFiles(folder: File): Boolean {
